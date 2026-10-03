@@ -1,0 +1,941 @@
+/* ============================================================
+   plugins.css —— 插件宿主 / 管理页 / 安装与支付确认框
+   类名统一 plg- 前缀，避免与全局冲突。
+   视觉沿用全局：白底卡片、#222 主色、8-12px 圆角、13-14px 文字。
+   ============================================================ */
+
+/* ---------- 弹窗宽度修饰 ---------- */
+.plg-modal-install { max-width: 480px !important; }
+.plg-modal-pay     { max-width: 440px !important; }
+.plg-modal-upload  { max-width: 520px !important; }
+
+/* ============================================================
+   插件宿主页（整页展示时由 .view 摊平，这里只需要 iframe 填满）
+   ============================================================ */
+.plg-host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #f5f6f8;
+  overflow: hidden;
+}
+
+.plg-host-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+
+.plg-host-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #555;
+  font-size: 14px;
+}
+.plg-host-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.plg-host-name { font-size: 15px; font-weight: 700; }
+.plg-host-ver  { font-size: 12px; color: #98a2b3; }
+
+.plg-host-actions { margin-left: auto; display: flex; gap: 6px; }
+
+.plg-host-frame-wrap {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* iframe 沙箱容器：白底 + 圆角 + 内阴影，视觉上像"窗口里的小应用" */
+.plg-frame {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.06);
+  display: block;
+}
+
+.plg-loading,
+.plg-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #888;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+}
+.plg-error { color: #e74c3c; }
+
+/* ============================================================
+   插件管理页（旧版：卡片 + 每张卡一排按钮）
+   ------------------------------------------------------------
+   [NOTE] 这套样式对应的旧版 PluginManager 已被"小程序宫格"版替换
+   （见文件下半部分的 .plg-mini-* 段落）。这里**保留**是因为：
+     · 万一某天要回退到卡片式 UI，不必从 git 里翻
+     · .plg-tab / .plg-search / .plg-card-icon / .plg-tag 等
+       仍被新版 PluginManager / PluginUploadDialog / PluginDetailDialog 复用
+   ============================================================ */
+.plg-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #f5f6f8;
+}
+
+.plg-page-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.plg-page-tabs { display: flex; gap: 4px; }
+
+.plg-tab {
+  padding: 7px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  color: #666;
+  font-size: 13px;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.plg-tab:hover { background: #f0f2f5; }
+.plg-tab.active { background: #222; color: #fff; }
+
+.plg-search {
+  margin-left: auto;
+  padding: 8px 14px;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  width: 220px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+.plg-search:focus { border-color: #222; }
+
+.plg-page-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 20px;
+}
+
+/* ============================================================
+   插件卡片网格（旧版）
+   ============================================================ */
+.plg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.plg-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: box-shadow 0.15s, transform 0.1s, border-color 0.15s;
+}
+.plg-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+  border-color: #d0d0d0;
+}
+
+.plg-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.plg-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #555;
+}
+.plg-card-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.plg-card-title { min-width: 0; flex: 1; }
+.plg-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #222;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plg-card-sub {
+  font-size: 11px;
+  color: #98a2b3;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plg-card-desc {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 36px;
+}
+
+.plg-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.plg-tag {
+  font-size: 10px;
+  line-height: 16px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+  background: #ecf0f1;
+  color: #555;
+}
+.plg-tag.own      { background: #222;      color: #fff; }
+.plg-tag.public   { background: #d4edda;   color: #155724; }
+.plg-tag.installed{ background: #dbeafe;   color: #1e40af; }
+.plg-tag.delisted { background: #f8d7da;   color: #721c24; }
+.plg-tag.hidden   { background: #fff3cd;   color: #856404; }
+
+.plg-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   权限列表（安装确认卡 / 详情卡）
+   ============================================================ */
+.plg-perm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+
+.plg-perm-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fafafa;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.plg-perm-check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.plg-perm-check.on {
+  background: #222;
+  border-color: #222;
+  color: #fff;
+}
+.plg-perm-check input { display: none; }
+
+.plg-perm-body { min-width: 0; flex: 1; }
+.plg-perm-label { font-weight: 600; color: #222; }
+.plg-perm-desc  { font-size: 12px; color: #888; margin-top: 2px; }
+
+.plg-perm-item.danger {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+/* ============================================================
+   支付确认框（宿主侧，只在此处出现"确认支付"按钮）
+   ============================================================ */
+.plg-pay-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #f0f7ff;
+  border: 1px solid #cfe0f8;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.plg-pay-amount {
+  font-size: 26px;
+  font-weight: 800;
+  color: #e67e22;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.plg-pay-subject {
+  font-size: 13px;
+  color: #333;
+  margin-top: 4px;
+  word-break: break-all;
+}
+
+.plg-pay-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px dashed #eee;
+  border-bottom: 1px dashed #eee;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.plg-pay-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.plg-pay-row strong { font-variant-numeric: tabular-nums; }
+
+.plg-pay-warn {
+  background: #fff8e1;
+  border: 1px solid #f0c36d;
+  color: #8a6100;
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   上传对话框
+   ============================================================ */
+.plg-upload-hint {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.7;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.plg-upload-hint code {
+  background: #eef0f3;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: #333;
+}
+
+.plg-file-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed #d0d0d0;
+  border-radius: 10px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.plg-file-pick:hover { background: #f0f0f0; border-color: #999; }
+.plg-file-pick.has-file { background: #fff; border-style: solid; border-color: #222; }
+
+.plg-file-meta { flex: 1; min-width: 0; }
+.plg-file-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plg-file-sub { font-size: 11px; color: #999; margin-top: 2px; }
+
+/* ============================================================
+   支付记录列表（供"我的支付"页使用，P5 附加）
+   ============================================================ */
+.plg-pay-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plg-pay-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+}
+.plg-pay-item:hover { background: #fafafa; }
+
+.plg-pay-item-main { flex: 1; min-width: 0; }
+.plg-pay-item-title { font-weight: 600; color: #222; }
+.plg-pay-item-sub { font-size: 11px; color: #999; margin-top: 2px; }
+
+.plg-pay-item-amount {
+  font-weight: 700;
+  color: #e67e22;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.plg-pay-item-amount.refunded {
+  color: #999;
+  text-decoration: line-through;
+}
+
+.plg-pay-item-status {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.plg-pay-item-status.paid     { background: #d4edda; color: #155724; }
+.plg-pay-item-status.refunded { background: #f8d7da; color: #721c24; }
+
+/* ============================================================
+   响应式（旧版）
+   ============================================================ */
+@media (max-width: 640px) {
+  .plg-page-head { padding: 12px; }
+  .plg-search { width: 100%; margin-left: 0; }
+  .plg-page-body { padding: 12px; }
+  .plg-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .plg-host-frame-wrap { padding: 8px; }
+  .plg-modal-install,
+  .plg-modal-pay,
+  .plg-modal-upload { max-width: 100% !important; }
+}
+
+/* ============================================================
+   [NEW] 小程序宫格（PluginManager 新版 UI）
+   ------------------------------------------------------------
+   前缀 plg-mini-*，与上面的旧卡片式样式完全隔离。
+   ============================================================ */
+
+.plg-mini {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #f5f6f8;
+  overflow: hidden;
+}
+
+/* ---------- 顶部：Tabs + 搜索 + 上传 ---------- */
+.plg-mini-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px 12px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.plg-mini-tabs { display: flex; gap: 4px; flex-shrink: 0; }
+
+.plg-mini-tab {
+  padding: 7px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  color: #666;
+  font-size: 13px;
+  transition: background .15s, color .15s;
+  font-family: inherit;
+}
+.plg-mini-tab:hover { background: #f0f2f5; }
+.plg-mini-tab.active { background: #222; color: #fff; }
+
+.plg-mini-search {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 180px;
+  max-width: 420px;
+  position: relative;
+}
+.plg-mini-search-input {
+  flex: 1;
+  padding: 8px 40px 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #d0d0d0;
+  background: #f8f9fa;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+  transition: background .15s, border-color .15s;
+}
+.plg-mini-search-input:focus {
+  background: #fff;
+  border-color: #222;
+}
+.plg-mini-search-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.plg-mini-search-btn:hover { background: #e8e8e8; color: #222; }
+
+.plg-mini-upload {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #222;
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s;
+}
+.plg-mini-upload:hover { background: #444; }
+
+/* ---------- 订阅行 ---------- */
+.plg-mini-subscribe {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+.plg-mini-subscribe-input {
+  flex: 1;
+  max-width: 320px;
+  padding: 6px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  font-size: 12.5px;
+  outline: none;
+  font-family: inherit;
+}
+.plg-mini-subscribe-input:focus { border-color: #222; }
+.plg-mini-subscribe-btn {
+  padding: 6px 14px;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.plg-mini-subscribe-btn:hover { background: #f0f0f0; border-color: #999; }
+.plg-mini-subscribe-msg { font-size: 12px; color: #999; }
+
+/* ---------- 宫格本体 ---------- */
+.plg-mini-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.plg-mini-grid {
+  display: grid;
+  /* 桌面 6 列起；宽屏更多，窄屏更少 */
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 20px 12px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ---------- 单元格 ---------- */
+.plg-mini-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 12px;
+  font-family: inherit;
+  transition: background .15s, transform .1s;
+  text-align: center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.plg-mini-cell:hover { background: #fff; transform: translateY(-1px); }
+.plg-mini-cell:active { transform: scale(0.97); }
+
+/* 已下架 / 已隐藏：整体灰化 */
+.plg-mini-cell.is-released { opacity: 0.55; }
+.plg-mini-cell.is-released:hover { background: #f0f0f0; }
+
+/* ---------- 图标 ---------- */
+.plg-mini-cell-icon {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: #222;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-weight: 700;
+  font-size: 26px;
+  flex-shrink: 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 1px 3px rgba(16, 24, 40, 0.10);
+  transition: box-shadow .15s;
+}
+.plg-mini-cell:hover .plg-mini-cell-icon {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.20),
+    0 4px 12px rgba(16, 24, 40, 0.16);
+}
+.plg-mini-cell-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.plg-mini-cell-letter {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* 未安装：右下角小下载角标 */
+.plg-mini-cell-dl {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #f5f6f8;
+}
+.plg-mini-cell:hover .plg-mini-cell-dl { box-shadow: 0 0 0 2px #fff; }
+
+/* 已下架/隐藏：右上角状态角标 */
+.plg-mini-cell-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 0 0 2px #f5f6f8;
+  white-space: nowrap;
+  line-height: 14px;
+}
+.plg-mini-cell-badge--delisted { background: #e74c3c; }
+.plg-mini-cell-badge--hidden   { background: #f0a500; }
+
+/* 自己的插件：左上角小圆点 */
+.plg-mini-cell-own {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2ecc71;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* 名称 */
+.plg-mini-cell-name {
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: #333;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+  padding: 0 2px;
+}
+.plg-mini-cell.is-released .plg-mini-cell-name { color: #999; }
+
+/* ---------- 空状态 ---------- */
+.plg-mini-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 60px 20px;
+  color: #999;
+  text-align: center;
+}
+.plg-mini-empty-icon { font-size: 44px; color: #d0d0d0; }
+.plg-mini-empty-title { font-size: 15px; font-weight: 600; color: #333; }
+.plg-mini-empty-desc { font-size: 13px; color: #999; }
+
+/* ============================================================
+   [NEW] 详情弹窗（PluginDetailDialog）
+   ============================================================ */
+.plg-detail-modal { max-width: 480px !important; }
+
+.plg-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 14px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 14px;
+}
+.plg-detail-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: #222;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 26px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.plg-detail-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.plg-detail-main { flex: 1; min-width: 0; }
+.plg-detail-name { font-size: 17px; font-weight: 700; color: #222; }
+.plg-detail-sub { font-size: 12px; color: #999; margin-top: 2px; }
+.plg-detail-sub code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  background: #f5f5f5;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #555;
+}
+.plg-detail-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+
+.plg-detail-desc {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.7;
+  padding: 10px 12px;
+  background: #fafbfc;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+
+.plg-detail-section { margin-bottom: 14px; }
+.plg-detail-section-title {
+  font-size: 12px;
+  color: #888;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.plg-detail-empty { font-size: 12px; color: #999; }
+
+.plg-detail-perms {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.plg-detail-perms li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #fafbfc;
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+.plg-detail-perm-label { color: #333; }
+.plg-detail-perm-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: #888;
+  background: #eef0f3;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.plg-detail-share {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  color: #222;
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 10px 14px;
+  user-select: all;
+}
+
+/* ============================================================
+   [NEW] 上传对话框的图标选择（PluginUploadDialog）
+   ============================================================ */
+.plg-icon-pick {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.plg-icon-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  border: 2px dashed #d0d0d0;
+  background: #fafbfc;
+  color: #999;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: border-color .15s, background .15s;
+  font-family: inherit;
+  padding: 0;
+}
+.plg-icon-preview:hover:not(:disabled) {
+  border-color: #222;
+  background: #f0f0f0;
+}
+.plg-icon-preview.has-icon { border-style: solid; border-color: #222; }
+.plg-icon-preview:disabled { opacity: 0.5; cursor: not-allowed; }
+.plg-icon-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.plg-icon-placeholder { font-size: 28px; font-weight: 300; }
+
+.plg-icon-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.plg-icon-tip { font-size: 11.5px; color: #999; line-height: 1.6; }
+.plg-icon-remove {
+  align-self: flex-start;
+  border: 1px solid #f5b7b1;
+  background: #fff;
+  color: #e74c3c;
+  font-size: 11.5px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.plg-icon-remove:hover { background: #fde8e8; }
+
+/* ============================================================
+   [NEW] 小程序宫格的响应式
+   ============================================================ */
+@media (max-width: 640px) {
+  .plg-mini-head { padding: 12px; gap: 8px; }
+  .plg-mini-search { max-width: none; }
+  .plg-mini-grid {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: 16px 8px;
+  }
+  .plg-mini-cell-icon { width: 56px; height: 56px; border-radius: 14px; font-size: 22px; }
+  .plg-mini-cell-letter { font-size: 22px; }
+  .plg-mini-cell-name { font-size: 11.5px; }
+  .plg-mini-subscribe { padding: 8px 12px; }
+  .plg-mini-subscribe-input { max-width: none; }
+  .plg-mini-body { padding: 14px 12px; }
+}

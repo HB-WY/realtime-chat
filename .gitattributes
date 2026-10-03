@@ -1,0 +1,49 @@
+# ============================================================
+# realtime-chat · 换行符与二进制文件统一策略
+# 仓库内统一 LF；二进制文件禁止 Git 做任何转换
+# ============================================================
+
+# 默认：Git 自动识别文本，仓库内统一 LF
+* text=auto eol=lf
+
+# Windows 脚本：必须 CRLF，否则 cmd / PowerShell 会报错
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Python（server/scripts/*.py）：LF 即可，Python 两种都认
+*.py   text eol=lf
+
+# 二进制：禁止换行符转换与 diff
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.bmp   binary
+*.avif  binary
+*.ico   binary
+*.svg   text eol=lf
+
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+
+*.pdf   binary
+*.zip   binary
+*.tar   binary
+*.gz    binary
+*.tgz   binary
+
+*.db        binary
+*.sqlite    binary
+*.sqlite3   binary
+*.plugin    binary
+
+*.mp3  binary
+*.mp4  binary
+*.m4a  binary
+*.webm binary
+*.wav  binary
+*.flac binary

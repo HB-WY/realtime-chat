@@ -1,0 +1,426 @@
+# ============================================================
+# 应用配置
+# 加载顺序：config.yaml → config.local.yaml（若存在）→ 环境变量覆盖
+# 敏感值（JWT_SECRET）请用环境变量，不要提交到 git。
+# ============================================================
+
+server:
+  port: 3001
+
+  # [SEC] 监听地址。默认只绑回环：不对外时后端只应被本机访问。
+  #   局域网共享（手机 / 别的电脑打开这个应用）用命令行临时改，别改这里：
+  #     npm run start:lan                 # = node index.js --host 0.0.0.0
+  #     node index.js --host 0.0.0.0
+  host: 127.0.0.1
+
+  # development | production
+  env: development
+
+# ------------------------------------------------------------
+# 前端静态托管（单端口部署 / 局域网共享）
+# ------------------------------------------------------------
+client:
+  serve: true
+  dist: ../client/dist
+
+# ------------------------------------------------------------
+# 安全
+# ------------------------------------------------------------
+security:
+  jwt:
+    secret: change-me-in-production
+    expiresIn: 7d
+
+  # [NEW] 双 token 认证（Cookie + 刷新令牌）
+  #
+  #   · Access Token：短期 JWT，前端**内存**持有，走 Authorization: Bearer
+  #     —— 不落 localStorage、不放 Cookie，XSS 拿不到长期凭据
+  #   · Refresh Token：长期随机串，**HttpOnly Cookie** 持有，可撤销、可轮换
+  #     —— 明文只在 Set-Cookie 时出现一次，库里只存 SHA-256
+  #
+  #   轮换语义：每次刷新都签发新 Refresh，旧的立即作废；
+  #   收到已作废的 Refresh = 可能被盗用 → 撤销整个 family 并强制重新登录。
+  #
+  #   详见 DEVLOG §0 认证架构与 ERRORLOG §19。
+  auth:
+    # Access 有效期（jsonwebtoken 的 expiresIn 格式）
+    access_ttl: 15m
+    # Refresh 有效期（毫秒；默认 30 天）
+    refresh_ttl_ms: 2592000000
+    # Refresh Cookie 名与路径：限定 Path=/api/auth，只有刷新端点能看到它
+    refresh_cookie_name: rt
+    refresh_cookie_path: /api/auth
+    # 迁移期兼容：允许老客户端继续用 typ 缺失的 JWT 当 Access。
+    # 稳定 30 天后建议改成 false（旧 token 全部过期）。
+    allow_legacy_bearer: true
+
+  apikey:
+    prefix_len: 12
+    secret_len: 40
+    max_per_user: 10
+    ip_binding: true
+
+  # 反扒：Referer 白名单。空数组 = 不校验
+  allowed_referer_hosts: []
+
+  # [SEC] 是否信任 X-Forwarded-For / X-Real-IP
+  trust_proxy: false
+
+  # [SEC] 在线列表可见范围。
+  #   related（默认）= 只返回「自己 + 好友 + 同群成员」的在线状态；
+  #   all            = 旧行为，把全站在线用户发给每个登录用户 / 每把有效密钥。
+  presence:
+    scope: related
+
+  # 上传黑名单（扩展名，正则字符串）
+  blocked_ext: '\.(html?|xhtml|svg|xml|js|mjs|cjs|css|htm)$'
+  blocked_mime:
+    - text/html
+    - application/xhtml+xml
+    - image/svg+xml
+    - application/xml
+    - text/xml
+    - application/javascript
+    - text/javascript
+    - application/ecmascript
+    - text/ecmascript
+
+# ------------------------------------------------------------
+# 文件类型（聊天 / 商品里的文件卡片图标与封面）
+# ------------------------------------------------------------
+files:
+  types: []
+
+# ------------------------------------------------------------
+# 插件系统（沙箱运行 + 权限 + 存储 + 支付 + 分发）
+#
+#   插件是一段第三方代码，跑在 <iframe sandbox="allow-scripts"> 里（不给
+#   allow-same-origin → 不透明源 → 拿不到宿主的 cookie / localStorage）。
+#   与宿主的通信只走 postMessage，宿主每次都要重查用户批准的权限。
+#
+#   manifest 示例：
+#     {
+#       "id": "weather",
+#       "name": "天气助手",
+#       "version": "1.0.0",
+#       "entry": "index.html",
+#       "permissions": ["user:read", "ui:toast", "storage", "payment:request"],
+#       "maxPayment": 500
+#     }
+# ------------------------------------------------------------
+plugins:
+  enabled: true
+
+  # 单个插件的体积上限（字节）—— 打包成 .plugin (JSON) 上传
+  max_bundle_bytes: 5242880       # 5 MB
+  # 单个文件解包后的体积上限
+  max_file_bytes: 1048576         # 1 MB
+  # 单个插件的文件数量上限
+  max_files_per_plugin: 100
+
+  # 每用户最多安装插件数
+  max_installed_per_user: 50
+  # 每用户最多发布插件数
+  max_published_per_user: 20
+
+  # 插件 KV 存储：每 (插件 × 用户) 的字节上限
+  kv_quota_bytes: 102400          # 100 KB
+  # 单个 value 的字节上限
+  kv_value_max_bytes: 16384       # 16 KB
+
+  # 权限白名单（manifest.permissions 里只能出现这些值）
+  allowed_permissions:
+    - 'user:read'          # 读自己的 id / nickname / avatar
+    - 'user:friends'       # 读好友列表
+    - 'room:list'          # 读会话列表（不含消息内容）
+    - 'message:send'       # 往会话发消息
+    - 'storage'            # 读写自己的 KV
+    - 'ui:toast'           # 弹宿主提示
+    - 'ui:close'           # 关闭自己，回宿主
+    - 'payment:request'    # 发起积分支付（**必须宿主确认框 + 服务端事务**）
+
+  # 支付约束
+  payment:
+    # 单次金额上限（插件 manifest.maxPayment 不能超过这个值）
+    max_single: 10000
+    # 默认单次金额上限（manifest 不写时用这个）
+    default_single: 1000
+    # [CHANGED] 每日笔数上限（原 max_daily_per_plugin 是"每日金额上限"）
+    #   · 金额维度拦不住「支付→退款→再支付」的循环（退款后金额归零）
+    #   · 也拦不住"恶意插件反复弹框让用户点确认"
+    #   · 笔数维度才是真正的"防失控"闸门：退款不减笔数，客观可查
+    #   参考 DEVLOG §1.92 / ERRORLOG §20。
+    max_daily_count_per_plugin: 100
+    # 允许退款的时间窗（毫秒）—— 超过后必须由管理员手动干预
+    refund_window_ms: 604800000   # 7 天
+
+# ------------------------------------------------------------
+# 数据库
+# ------------------------------------------------------------
+database:
+  path: chat.db
+  journal_mode: WAL
+  foreign_keys: true
+
+# ------------------------------------------------------------
+# 上传
+# ------------------------------------------------------------
+uploads:
+  root: uploads
+  subdirs:
+    avatars: avatars
+    files:   files
+    shop:    shop
+    covers:  covers
+    custom:  custom
+    tmp:     tmp
+    plugins: plugins   # 插件解包目录（不静态暴露，走鉴权接口）
+
+  limits:
+    avatar:    8388608      # 8 MB
+    file:      524288000    # 500 MB（聊天附件，单文件）
+    shop_file: 524288000    # 500 MB（商品文件，单文件）
+    cover:     5242880      # 5 MB
+    asset:     524288000    # 500 MB（资源池单文件；图片类前端会先压缩）
+
+  avatar:
+    allowed_ext: ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.avif']
+    allowed_mime_prefix: 'image/'
+    max_url_len: 500
+    max_data_url_len: 200000
+
+# ------------------------------------------------------------
+# 音视频转码（本地 ffmpeg）
+# ------------------------------------------------------------
+media:
+  transcode:
+    enabled: true
+    ffmpeg:  ffmpeg
+    ffprobe: ffprobe
+    concurrency: 2
+    timeout_ms: 1800000
+    probe_timeout_ms: 15000
+    max_queue: 50
+    max_source_bytes: 524288000   # [FIX] 0(不限) → 500MB：与上传上限一致，防超大文件占满 CPU
+    video:
+      crf: 23
+      preset: veryfast
+      audio_bitrate: 128k
+      max_height: 0
+    audio:
+      bitrate: 192k
+
+# ------------------------------------------------------------
+# 静态目录：对外暴露的 uploads 子目录
+#
+# [SEC] plugins 不在这里 —— 插件代码必须走鉴权接口 /api/plugins/:id/entry
+#       和 /api/plugins/:id/asset，否则任何插件都能通过 <script src> 攻击宿主。
+# ------------------------------------------------------------
+static:
+  expose: [avatars, files, covers, custom]
+
+# ------------------------------------------------------------
+# 业务规则
+# ------------------------------------------------------------
+business:
+  signup_points: 50
+
+  shop:
+    markets: [standard, official, flea]
+    categories: [goods, background, bubble, sticker_pack]
+    price:
+      min: 0
+      max: 100000
+    title:
+      min_len: 2
+      max_len: 80
+    description_max_len: 2000
+    files:
+      min: 1
+      max: 20
+    plagiarism:
+      similarity_threshold: 95
+      candidate_limit: 500
+    grant_assets: true
+
+  assets:
+    # [CHANGED] 按需求调整：单次上传（批量合计）≤500MB，不再设用户总量配额。
+    #   quota_bytes: 0 = 不限制总用量（只保留单次与单文件上限 + 上传频率限流）
+    quota_bytes: 0
+    batch_max_bytes: 524288000
+    max_files_per_request: 50
+    allowed_ext: ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.avif']
+    allowed_mime: ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp', 'image/avif']
+
+  stickers:
+    max_packs_per_user: 30
+    max_items_per_pack: 200
+    name_max_len: 30
+    description_max_len: 200
+    share_code_len: 10
+
+  preferences:
+    background_max_len: 500
+    bubble_max_len: 4000
+    font_size:
+      min: 12
+      max: 20
+    max_rooms: 200
+
+  message:
+    text_max_len: 2000
+    recall_window_ms: 120000
+    history_limit: 200
+
+  user:
+    username:
+      min_len: 2
+      max_len: 20
+    password:
+      min_len: 6
+    nickname:
+      min_len: 1
+      max_len: 20
+    # 个性签名（用户卡片 / 资料页展示）
+    signature:
+      max_len: 60
+    group_name:
+      max_len: 30
+
+# ------------------------------------------------------------
+# 限流（每用户 / 每连接）
+# ------------------------------------------------------------
+rate_limits:
+  socket:
+    message: { per_second: 5, per_minute: 200 }
+    write:   { per_second: 10, per_minute: 300 }
+    # 在线状态 / 搜索类事件（读多写少，预算更宽）
+    presence: { per_second: 10, per_minute: 600 }
+
+  # [NEW] 注册接口限流（按 IP）：防脚本批量注册刷初始积分
+  #   注意 NAT / 办公局域网下多人共享出口 IP，额度不要设太紧
+  register:
+    window_ms: 3600000
+    max_per_ip: 30
+
+  # [NEW] 上传接口限流（按用户，所有上传通道共用）：
+  #   /api/user/file、/api/user/avatar、/api/shop/upload、
+  #   /api/shop/cover、/api/assets/upload
+  upload:
+    window_ms: 60000
+    max: 20
+
+  # [NEW] 转码状态查询限流（按用户）：/api/media/status 会顺手入队转码
+  media_status:
+    window_ms: 60000
+    max: 120
+
+  download:
+    window_ms: 60000
+    max: 10
+
+  preview:
+    window_ms: 60000
+    max: 60
+
+  apikey:
+    window_ms: 60000
+    max: 600
+
+  login:
+    window_ms: 900000
+    max_per_ip: 30
+    max_per_account: 10
+
+  # 插件桥调用（每次 host.call 都算一次）
+  plugin:
+    window_ms: 60000
+    max: 600
+
+  # 插件支付（每小时最多发起多少次，避免刷接口）
+  plugin_payment:
+    window_ms: 3600000
+    max: 30
+
+# ------------------------------------------------------------
+# 角色与能力
+# ------------------------------------------------------------
+roles:
+  definitions:
+    developer:   { level: 100, label: 开发者 }
+    super_admin: { level: 90,  label: 超级管理员 }
+    admin:       { level: 50,  label: 管理员 }
+    user:        { level: 0,   label: 普通用户 }
+
+  requestable: [super_admin, developer]
+  promotion_cooldown_ms: 604800000
+
+  grantable_by:
+    developer:   [super_admin, admin, user]
+    super_admin: [admin, user]
+    admin:       []
+    user:        []
+
+  capabilities:
+    view_audit:       50
+    hide_product:     50
+    delist_product:   50
+    disable_user:     50
+    # [CHANGED] 上架权限拆分：
+    #   · 跳蚤市场 / 标准市场：所有登录用户均可上架（不再受 list_products 限制）
+    #   · 官方市场（official）：受 official_publish 拦截（官方自营，冒充官方发布）
+    # list_products 保留为官方市场上架的能力位（与 official_publish 同级同义，
+    # 供前端 /me/capabilities 展示与二次校验）。
+    official_publish: 50
+    list_products:    50
+    manage_apikeys:   50
+    manage_public_room: 100
+    ban_user:         90
+    delist_any:       90
+    grant_admin:      100
+    review_price:     100
+    review_promotion: 100
+    # 插件管理：只有管理员及以上才能下架他人插件 / 审核
+    review_plugin:    50
+    delist_plugin:    50
+
+# ------------------------------------------------------------
+# 官方系统账户
+# ------------------------------------------------------------
+official_account:
+  username: '__official__'
+  nickname: 官方商城
+  avatar:   '🏛️'
+  role:     developer
+
+# ------------------------------------------------------------
+# 支付系统（转账 + 红包）
+#
+#   资金流转全部走现有积分体系（points.js::changePoints）——
+#   不新建"余额"，用户只有一个钱包（积分）。
+#
+#   托管：发送红包/转账时，钱从发送者账户划到官方系统账户
+#   （OFFICIAL_USER_ID），领取时再划给领取者，超时退回发送者。
+#   这样每笔 money movement 都是成对流水，可审计。
+#
+#   注意：单次上限按"积分数"计，与商城 / 插件共用同一套积分口径。
+# ------------------------------------------------------------
+payments:
+  transfer:
+    min_amount: 1
+    max_amount: 10000
+    daily_limit: 50000       # 转账 + 红包 **合计** 每日发出上限
+    expire_hours: 24
+    note_max_len: 50
+
+  redpacket:
+    min_amount_per_pack: 1   # 每份红包的最小金额
+    max_amount: 10000        # 单个红包的总额上限
+    max_count: 100           # 单个红包的最多份数
+    expire_hours: 24
+    note_max_len: 20
+
+  # 发起转账 / 红包的频次限制（滑动窗口，按用户）
+  rate_limit:
+    window_ms: 60000
+    max: 10

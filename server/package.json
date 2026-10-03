@@ -1,0 +1,45 @@
+{
+  "name": "wechat-chat-server",
+  "version": "1.0.0",
+  "description": "WeChat-style chat server with JWT + Socket.IO + SQLite + YAML config",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "start:lan": "node index.js --host 0.0.0.0",
+    "dev": "nodemon index.js",
+    "test:api": "node scripts/smoke_test.mjs",
+    "test:socket": "node scripts/socket_check.mjs",
+    "test:room-icon": "node scripts/room_icon_check.mjs",
+    "test:security": "node scripts/security_check.mjs",
+    "test:static": "node scripts/static_host_check.mjs",
+    "test:image": "node scripts/image_check.mjs",
+    "test:formats": "node scripts/upload_format_check.mjs",
+    "test:file-types": "node scripts/file_types_check.mjs",
+    "test:transcode": "node scripts/transcode_check.mjs",
+    "test:payments": "node scripts/payments_check.mjs",
+    "test:stickers": "node scripts/sticker_pack_check.mjs",
+    "test:plugins": "node scripts/plugin_check.mjs",
+    "cleanup:test-data": "node scripts/cleanup_test_data.mjs",
+    "cleanup:orphans": "node scripts/cleanup_orphan_files.mjs",
+    "plugins:build": "node ../plugins-demo/build.mjs",
+    "scaffold": "node -e \"require('child_process').execSync('python scripts/scaffold.py',{stdio:'inherit'})\"",
+    "init:accounts": "python scripts/init_accounts.py",
+    "init:accounts:apply": "python scripts/init_accounts.py --apply",
+    "test:plugins-v3": "node scripts/plugin_v3_check.mjs"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.3.0",
+    "socket.io": "^4.8.1",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

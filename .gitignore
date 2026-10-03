@@ -1,0 +1,102 @@
+# ============================================================
+# realtime-chat · 根级 .gitignore
+# 只放跨模块的通用规则；client / server 各自有独立 .gitignore
+# ============================================================
+
+# ---------- 操作系统 ----------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ---------- 编辑器 / IDE ----------
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*.swx
+*~
+*.bak
+*.orig
+*.rej
+
+# ---------- 日志 ----------
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ---------- Node 依赖 ----------
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+jspm_packages/
+
+# ---------- 构建产物 ----------
+dist/
+build/
+out/
+.vite/
+.cache/
+.parcel-cache/
+.eslintcache
+*.tsbuildinfo
+
+# ---------- 环境 / 本地配置（含密钥，绝不入库）----------
+.env
+.env.*
+!.env.example
+*.local
+*.local.yaml
+*.local.yml
+
+# ---------- 数据库（真实数据，绝不入库）----------
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# ---------- 插件打包产物 ----------
+# 源码在 plugins-demo/<id>/ 里，pack-plugin.mjs 的输出不入库
+plugins-demo/*.plugin
+plugins-demo/**/*.plugin
+*.plugin
+
+# ---------- 压缩包（死文件 / 临时归档）----------
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# ---------- 临时文件 ----------
+tmp/
+temp/
+*.tmp
+*.tmpdir/
+*.pid
+*.seed
+
+# ---------- 测试 / 覆盖率 ----------
+coverage/
+.nyc_output/
+*.lcov
+
+# ---------- Python（server/scripts 里有 .py 工具）----------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/

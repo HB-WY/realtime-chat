@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>image.js 回归</title></head>
+<body>
+<pre id="out">running…</pre>
+<script type="module">
+import { prepareImage, prepareImages, ImagePrepareError } from '/src/utils/image.js';
+
+const results = [];
+const ok = (cond, label, extra) => results.push({ ok: !!cond, label, extra });
+
+const MB = 1024 * 1024;
+
+function canvasBlob(w, h, { alpha = false, type = 'image/jpeg', quality = 0.95 } = {}) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  if (alpha) {
+    ctx.clearRect(0, 0, w, h);                     // 透明底
+    ctx.fillStyle = '#e11'; ctx.fillRect(0, 0, w >> 1, h); // 左半边不透明
+  } else {
+    // 噪声：让 JPEG 压不下去，模拟手机直出大图
+    const img = ctx.createImageData(w, h);
+    for (let i = 0; i < img.data.length; i += 4) {
+      img.data[i] = (i * 7) % 255;
+      img.data[i + 1] = (i * 13) % 255;
+      img.data[i + 2] = (i * 29) % 255;
+      img.data[i + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  return new Promise((r) => c.toBlob((b) => r(b), type, quality));
+}
+
+/** 往 JPEG 里插一段 EXIF，带上 Orientation（用来验证「手机照片方向」） */
+function withExifOrientation(blob, orientation) {
+  return blob.arrayBuffer().then((buf) => {
+    const u8 = new Uint8Array(buf);
+    const tiff = [
+      0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08,           // big-endian TIFF 头
+      0x00, 0x01,                                               // IFD0: 1 条
+      0x01, 0x12, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01,           // Orientation, SHORT, count=1
+      0x00, orientation, 0x00, 0x00,                            // value
+      0x00, 0x00, 0x00, 0x00                                    // 没有下一个 IFD
+    ];
+    const payload = [0x45, 0x78, 0x69, 0x66, 0x00, 0x00, ...tiff]; // "Exif\0\0"
+    const len = payload.length + 2;
+    const app1 = [0xFF, 0xE1, (len >> 8) & 0xFF, len & 0xFF, ...payload];
+    const out = new Uint8Array(u8.length + app1.length);
+    out.set(u8.subarray(0, 2), 0);
+    out.set(app1, 2);
+    out.set(u8.subarray(2), 2 + app1.length);
+    return new File([out], 'exif.jpg', { type: 'image/jpeg' });
+  });
+}
+
+const dims = async (file) => {
+  const bmp = await createImageBitmap(file);
+  const d = { w: bmp.width, h: bmp.height };
+  bmp.close?.();
+  return d;
+};
+
+try {
+  // 1) 4000×3000 的「手机直出」大图 → 压到 1024 / 3.5MB
+  {
+    const big = new File([await canvasBlob(4000, 3000)], 'IMG_1234.jpg', { type: 'image/jpeg' });
+    const out = await prepareImage(big, { maxDim: 1024, maxBytes: 3.5 * MB, label: '头像' });
+    const d = await dims(out);
+    ok(out instanceof File, '返回 File');
+    ok(Math.max(d.w, d.h) <= 1024, `最长边压到 ≤1024（${d.w}×${d.h}）`, [d.w, d.h]);
+    ok(out.size <= 3.5 * MB, `体积 ≤3.5MB（${(out.size / MB).toFixed(2)}MB ← ${(big.size / MB).toFixed(2)}MB）`, out.size);
+    ok(out.type === 'image/jpeg' && /\.jpe?g$/i.test(out.name), '不带透明的图转成 JPEG', [out.type, out.name]);
+    ok(big.size > 3.5 * MB, `（前提）原图确实超过上限：${(big.size / MB).toFixed(2)}MB`);
+  }
+
+  // 2) 带透明通道的大 PNG → 保留 PNG（透明不能被烤成白底）
+  {
+    const png = new File([await canvasBlob(3000, 2000, { alpha: true, type: 'image/png' })], 'shot.png', { type: 'image/png' });
+    const out = await prepareImage(png, { maxDim: 800, maxBytes: 8 * MB, label: '背景图' });
+    const d = await dims(out);
+    ok(out.type === 'image/png', '有透明像素 → 仍用 PNG', out.type);
+    ok(Math.max(d.w, d.h) <= 800, `尺寸受限（${d.w}×${d.h}）`, [d.w, d.h]);
+  }
+
+  // 3) 已经够小的图 → 原样返回（不重编码，保画质）
+  {
+    const small = new File([await canvasBlob(200, 150)], 'small.jpg', { type: 'image/jpeg' });
+    const out = await prepareImage(small, { maxDim: 1024, maxBytes: 3.5 * MB });
+    ok(out === small, '尺寸与体积都达标时原样返回（同一对象）');
+  }
+
+  // 4) GIF / SVG / 非图片 → 一律不动
+  {
+    const gif = new File([new Uint8Array([0x47, 0x49, 0x46, 0x38])], 'a.gif', { type: 'image/gif' });
+    ok((await prepareImage(gif)) === gif, 'GIF 原样返回（保住动画）');
+    const svg = new File(['<svg/>'], 'a.svg', { type: 'image/svg+xml' });
+    ok((await prepareImage(svg)) === svg, 'SVG 原样返回（交给服务端按既定策略拒绝）');
+    const txt = new File(['hi'], 'a.txt', { type: 'text/plain' });
+    ok((await prepareImage(txt)) === txt, '非图片文件原样返回');
+  }
+
+  // 5) 解不开的（桌面浏览器遇到 HEIC）→ 明确的、可执行的报错
+  {
+    const heic = new File([new Uint8Array([0, 0, 0, 0x18, 0x66, 0x74, 0x79, 0x70])], 'IMG_1.heic', { type: 'image/heic' });
+    try {
+      await prepareImage(heic, { maxDim: 1024, maxBytes: MB, label: '头像' });
+      ok(false, 'HEIC 无法解码时应抛错');
+    } catch (err) {
+      ok(err instanceof ImagePrepareError && err.code === 'UNDECODABLE', 'HEIC → ImagePrepareError/UNDECODABLE', err.code);
+      ok(/HEIC|JPEG/.test(err.message) && /相册|相机/.test(err.message), '报错文案给出了可执行的做法', err.message.slice(0, 40));
+    }
+  }
+
+  // 6) EXIF 方向：400×200 且 orientation=6（旋转 90°）→ 必须按方向解码
+  {
+    const raw = await canvasBlob(400, 200);
+    const rotated = await withExifOrientation(raw, 6);
+    const out = await prepareImage(rotated, { maxDim: 300, maxBytes: 8 * MB });
+    const d = await dims(out);
+    ok(d.h > d.w, `EXIF orientation=6 已生效：输出竖图 ${d.w}×${d.h}（没处理的话会是 300×150 横图）`, [d.w, d.h]);
+  }
+
+  // 7) 多文件版（资源池 / 表情包批量）
+  {
+    const a = new File([await canvasBlob(1200, 900)], 'a.jpg', { type: 'image/jpeg' });
+    const b = new File([await canvasBlob(1400, 1000)], 'b.jpg', { type: 'image/jpeg' });
+    const out = await prepareImages([a, b], { maxDim: 512, maxBytes: MB });
+    const ds = [await dims(out[0]), await dims(out[1])];
+    ok(out.length === 2 && ds.every((d) => Math.max(d.w, d.h) <= 512), 'prepareImages 批量处理全部达标', ds);
+  }
+} catch (err) {
+  ok(false, 'harness 抛异常', String(err && err.stack || err));
+}
+
+document.getElementById('out').textContent = JSON.stringify(results);
+fetch('/result', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(results) });
+</script>
+</body>
+</html>

@@ -1,0 +1,559 @@
+/* ============================================================
+   assets-stickers.css —— 表情包管理 / 资源库弹窗样式
+   所有类名以 stk- / ast- 前缀，避免与全局样式冲突。
+   视觉沿用全局：白底卡片、#222 主色、8-12px 圆角、
+   13-14px 文字、#e8e8e8 细边框。
+   ============================================================ */
+
+/* ---------- 弹窗宽度修饰（全局 .modal-card 为 420px） ---------- */
+.stk-modal { max-width: 760px !important; }
+.ast-modal { max-width: 720px !important; }
+
+/* ============================================================
+   表情包管理
+   ============================================================ */
+.stk-panel {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 12px;
+  max-height: 62vh;
+  min-height: 320px;
+  align-items: stretch;
+}
+
+/* ---------- 左列：列表 ---------- */
+.stk-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 62vh;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  background: #fafafa;
+  overflow: hidden;
+}
+
+.stk-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+/* 新建表单 */
+.stk-create {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed #e8e8e8;
+}
+.stk-create .auth-input {
+  padding: 7px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+.stk-create-btn {
+  margin-top: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+/* 列表项 */
+.stk-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.stk-list-item:hover { background: #f0f0f0; }
+.stk-list-item.active {
+  background: #222;
+  border-color: #222;
+}
+.stk-list-item.active .stk-list-name,
+.stk-list-item.active .stk-list-sub { color: #fff; }
+.stk-list-item.active .stk-badge {
+  background: #fff;
+  color: #222;
+}
+
+.stk-list-thumb {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #eee;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stk-list-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.stk-list-thumb-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: #888;
+}
+
+.stk-list-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.stk-list-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stk-list-sub {
+  font-size: 11px;
+  color: #999;
+}
+.stk-list-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+/* 徽章 */
+.stk-badge {
+  font-size: 10px;
+  line-height: 14px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #555;
+  background: #ecf0f1;
+  white-space: nowrap;
+}
+.stk-badge-own { background: #222; color: #fff; }
+.stk-badge-sub { background: #dfe9f5; color: #2c5f8d; }
+.stk-badge-public { background: #d4edda; color: #155724; }
+
+/* 订阅表单：固定在左列底部 */
+.stk-subscribe {
+  flex-shrink: 0;
+  padding: 8px;
+  border-top: 1px solid #e8e8e8;
+  background: #fff;
+}
+.stk-subscribe-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.stk-subscribe-row .auth-input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+.stk-subscribe-btn {
+  flex: none;
+  width: auto;
+  margin-top: 0;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+.stk-subscribe .auth-error {
+  text-align: left;
+  min-height: 0;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* ---------- 右列：详情 ---------- */
+.stk-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.stk-detail-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.stk-detail-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+}
+.stk-detail-sub {
+  font-size: 11px;
+  color: #999;
+}
+.stk-detail-desc {
+  font-size: 12px;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+/* 改名 / 简介 */
+.stk-edit-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.stk-edit-row .auth-input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+.stk-edit-row .auth-input:nth-child(2) { flex: 1.4; }
+
+/* 分享码行 */
+.stk-share-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fafafa;
+}
+.stk-share-row .auth-input {
+  flex: 1;
+  min-width: 120px;
+  padding: 7px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+  background: #fff;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+/* 小按钮（覆盖 .btn-secondary 的 flex: 1） */
+.stk-mini {
+  flex: none;
+  width: auto;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+/* 上传工具条 */
+.stk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stk-hint {
+  font-size: 11px;
+  color: #999;
+  line-height: 1.5;
+}
+
+.stk-msg {
+  text-align: left;
+  margin-top: 0;
+  font-size: 12px;
+}
+
+/* 表情网格 */
+.stk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.stk-cell {
+  position: relative;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+}
+.stk-cell img,
+.stk-cell-img,
+.sticker-cell {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #fafafa;
+}
+
+/* 单元格工具条（上移 / 下移 / 删除） */
+.stk-cell-tools {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid #eee;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.stk-cell:hover .stk-cell-tools,
+.stk-cell:focus-within .stk-cell-tools { opacity: 1; }
+
+.stk-cell-btn {
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  color: #555;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.stk-cell-btn:hover:not(:disabled) { background: #f0f0f0; }
+.stk-cell-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.stk-cell-del { color: #e74c3c; border-color: #f5b7b1; }
+.stk-cell-del:hover { background: #fde8e8; }
+
+/* 底部危险操作 */
+.stk-actions { justify-content: flex-end; }
+.stk-danger {
+  flex: none;
+  width: auto;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+/* ============================================================
+   资源库
+   ============================================================ */
+.ast-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e8e8e8;
+  margin-bottom: 10px;
+}
+
+.ast-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.ast-tab {
+  padding: 8px 14px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  color: #888;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ast-tab:hover { color: #333; }
+.ast-tab.active { color: #222; border-bottom-color: #222; }
+
+.ast-quota {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding-bottom: 8px;
+  text-align: right;
+}
+.ast-quota-main {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+  font-variant-numeric: tabular-nums;
+}
+.ast-quota-sub {
+  font-size: 11px;
+  color: #999;
+}
+
+/* 上传条 */
+.ast-upload {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+.ast-kind {
+  flex: none;
+  width: 110px;
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+  background: #fff;
+}
+.ast-upload-btn {
+  flex: 1;
+  width: auto;
+  margin-top: 0;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+.ast-status {
+  text-align: left;
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+/* 资源网格 */
+.ast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  max-height: 56vh;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.ast-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.ast-cell-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+  overflow: hidden;
+}
+.ast-cell img,
+.ast-cell-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.ast-cell-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px 8px;
+  min-width: 0;
+}
+.ast-cell-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ast-cell-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: #999;
+}
+.ast-tag {
+  font-size: 10px;
+  line-height: 14px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  background: #ecf0f1;
+  color: #555;
+}
+
+.ast-cell-del {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.ast-cell:hover .ast-cell-del,
+.ast-cell:focus-within .ast-cell-del { opacity: 1; }
+
+/* ============================================================
+   响应式：<640px 时改为单列
+   ============================================================ */
+@media (max-width: 640px) {
+  .stk-modal,
+  .ast-modal { max-width: 100% !important; }
+
+  .stk-panel {
+    grid-template-columns: minmax(0, 1fr);
+    max-height: none;
+  }
+  .stk-list {
+    max-height: 34vh;
+    min-height: 180px;
+  }
+  .stk-detail {
+    max-height: none;
+    overflow-y: visible;
+  }
+  .stk-grid {
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  }
+  .ast-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    max-height: none;
+    overflow-y: visible;
+  }
+  .ast-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ast-tabs { overflow-x: auto; }
+  .ast-quota {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  /* 触屏没有 hover：工具条常显 */
+  .stk-cell-tools,
+  .ast-cell-del { opacity: 1; }
+}

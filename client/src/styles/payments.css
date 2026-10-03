@@ -1,0 +1,336 @@
+/* ============================================================
+   payments.css —— 转账 / 红包（微信风格）
+   前缀统一 pay- 避免与全局冲突；金额一律等宽数字。
+   ============================================================ */
+
+/* ---------------- 聊天里的红包卡片 ---------------- */
+.pay-card {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 220px;
+  max-width: 280px;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.1s, box-shadow 0.15s;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  text-align: left;
+}
+.pay-card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14); }
+.pay-card:active { transform: scale(0.99); }
+
+/* 红包：红色 + 顶部金标 */
+.pay-rp {
+  background: linear-gradient(135deg, #fa6a53 0%, #d93a2b 100%);
+  color: #fff8e6;
+}
+.pay-rp.pay-rp-empty {
+  background: linear-gradient(135deg, #d6bcae 0%, #b89d8a 100%);
+  color: #fbf3e6;
+}
+
+.pay-card-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.pay-card-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pay-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pay-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pay-card-sub {
+  font-size: 11px;
+  opacity: 0.85;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pay-card-foot {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 6px 14px;
+  font-size: 11px;
+  opacity: 0.85;
+  letter-spacing: 0.3px;
+}
+
+/* 转账：暖橙 */
+.pay-tr {
+  background: linear-gradient(135deg, #ffb73a 0%, #f0932b 100%);
+  color: #3a2606;
+}
+.pay-tr.pay-tr-settled {
+  background: linear-gradient(135deg, #f3dfc5 0%, #d9c3a1 100%);
+  color: #5a4a33;
+}
+
+.pay-tr-amount {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pay-tr-status {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+/* 底部按钮组（收款 / 退还） */
+.pay-actions {
+  display: flex;
+  gap: 6px;
+  padding: 0 14px 12px;
+  background: inherit;
+}
+.pay-actions button {
+  flex: 1;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  font-family: inherit;
+}
+.pay-actions .pay-btn-primary {
+  background: rgba(255, 255, 255, 0.92);
+  color: #2f1f07;
+}
+.pay-actions .pay-btn-primary:hover { background: #fff; }
+.pay-actions .pay-btn-ghost {
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+}
+.pay-actions .pay-btn-ghost:hover { background: rgba(255, 255, 255, 0.28); }
+
+/* ---------------- 输入区 "+" 菜单 ---------------- */
+/* 【新增】"+" 按钮：与现有 toolbar 按钮同风格 */
+.pay-plus-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pay-plus-btn:hover:not(:disabled) { background: #e8e8e8; border-color: #d0d0d0; }
+.pay-plus-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pay-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  min-width: 140px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  z-index: 60;
+  animation: fadeIn 0.15s ease;
+}
+.pay-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+.pay-menu button:hover { background: #f5f5f5; }
+.pay-menu button:disabled { opacity: 0.5; cursor: not-allowed; }
+.pay-menu .pay-menu-icon { flex-shrink: 0; color: #888; }
+
+/* ---------------- 弹窗（发红包 / 转账） ---------------- */
+.pay-dialog { max-width: 380px !important; }
+
+.pay-dialog-amount {
+  text-align: center;
+  padding: 18px 0 6px;
+  font-size: 40px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #222;
+  letter-spacing: -1px;
+}
+.pay-dialog-amount.over { color: #e74c3c; }
+.pay-dialog-amount::before {
+  content: '¥';
+  font-size: 22px;
+  font-weight: 600;
+  color: #999;
+  margin-right: 4px;
+  vertical-align: 8px;
+}
+.pay-dialog-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 14px;
+}
+
+.pay-dialog-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.pay-dialog-row label {
+  flex-shrink: 0;
+  width: 64px;
+  font-size: 13px;
+  color: #555;
+  font-weight: 600;
+}
+.pay-dialog-row .auth-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.pay-dialog-fields {
+  padding: 6px 0 4px;
+  border-top: 1px dashed #eee;
+  border-bottom: 1px dashed #eee;
+  margin: 8px 0 12px;
+}
+
+.pay-mode-picker {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.pay-mode-choice {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12px;
+  color: #555;
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pay-mode-choice.active {
+  border-color: #d93a2b;
+  background: #fff5f2;
+  color: #d93a2b;
+  font-weight: 600;
+}
+.pay-mode-choice:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------------- 红包详情（谁抢了多少） ---------------- */
+.pay-rp-detail-head {
+  text-align: center;
+  padding: 10px 0 14px;
+  background: linear-gradient(180deg, #fff5f0 0%, #fff 100%);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.pay-rp-detail-from {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 4px;
+}
+.pay-rp-detail-note {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+.pay-rp-detail-amount {
+  margin-top: 8px;
+  font-size: 26px;
+  font-weight: 800;
+  color: #d93a2b;
+  font-variant-numeric: tabular-nums;
+}
+.pay-rp-detail-amount small {
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: 2px;
+}
+.pay-rp-detail-mine {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  background: #fff0e8;
+  color: #d93a2b;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pay-rp-grants {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 4px;
+}
+.pay-rp-grant-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+.pay-rp-grant-row:hover { background: #fafafa; }
+.pay-rp-grant-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pay-rp-grant-amount {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d93a2b;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,8 @@
+{
+  "id": "user-rules",
+  "name": "用户守则",
+  "version": "1.0.0",
+  "description": "本应用的用户守则、社区规范与使用条款（Markdown 原文，插件内渲染）",
+  "entry": "index.html",
+  "permissions": ["ui:close"]
+}
